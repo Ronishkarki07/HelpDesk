@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS faculties (
 -- Levels/Semesters Reference Table
 CREATE TABLE IF NOT EXISTS levels (
   id INT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(50) UNIQUE NOT NULL,
+  name VARCHAR(50) NOT NULL,
   description TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
