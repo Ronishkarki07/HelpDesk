@@ -6,7 +6,6 @@ import Building from "../images/building.png";
 export default function Signup() {
   const navigate = useNavigate();
 
-  // 🔥 refs for enter navigation
   const emailRef = useRef();
   const facultyRef = useRef();
   const levelRef = useRef();
@@ -28,55 +27,58 @@ export default function Signup() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // ✅ validation function
-  const validate = (name, value) => {
-    let error = "";
-
+  // ✅ FIXED: returns error string instead of only setting state
+  // so we can collect errors synchronously before submit
+  const getError = (name, value, currentForm) => {
     if (name === "name") {
-      if (!value) error = "Full name is required";
-      else if (!/^[A-Za-z\s]+$/.test(value)) error = "Name cannot contain numbers";
+      if (!value) return "Full name is required";
+      if (!/^[A-Za-z\s]+$/.test(value)) return "Name cannot contain numbers";
     }
-
     if (name === "email") {
-      if (!value) error = "Email is required";
-      else if (!value.endsWith("@bicnepal.edu.np")) error = "Use institutional email";
+      if (!value) return "Email is required";
+      if (!value.endsWith("@bicnepal.edu.np")) return "Use institutional email";
     }
-
-    if (name === "faculty" && !value) error = "Select faculty";
-
-    if (name === "level" && !value) error = "Select level";
-
+    if (name === "faculty" && !value) return "Select faculty";
+    if (name === "level" && !value) return "Select level";
     if (name === "password") {
-      if (!value) error = "Password required";
-      else if (value.length < 6) error = "Minimum 6 characters";
+      if (!value) return "Password required";
+      if (value.length < 6) return "Minimum 6 characters";
     }
-
     if (name === "confirmPassword") {
-      if (!value) error = "Confirm password";
-      else if (value !== form.password) error = "Passwords do not match";
+      if (!value) return "Confirm password";
+      const pwd = currentForm ? currentForm.password : form.password;
+      if (value !== pwd) return "Passwords do not match";
     }
+    return "";
+  };
 
+  const validate = (name, value) => {
+    const error = getError(name, value);
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  // ✅ handle change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
     validate(name, value);
   };
 
-  // ✅ handle submit with API integration
   const handleSignup = async (e) => {
     e.preventDefault();
 
-    // Run validation on all fields
-    Object.keys(form).forEach((key) => validate(key, form[key]));
+    // ✅ FIXED: collect all errors synchronously into a local object
+    const newErrors = {};
+    Object.keys(form).forEach((key) => {
+      newErrors[key] = getError(key, form[key], form);
+    });
+    setErrors(newErrors);
 
-    if (Object.values(errors).some((e) => e)) return;
+    // Stop if any errors exist
+    if (Object.values(newErrors).some((e) => e)) return;
 
     setLoading(true);
     try {
+      // ✅ Already correct URL — keeping as-is
       const res = await fetch("http://localhost:3007/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -89,7 +91,7 @@ export default function Signup() {
         alert(data.error || "Signup failed");
       } else {
         localStorage.setItem("otpEmail", data.email);
-        alert("OTP sent 📩");
+        alert("OTP sent 📩 Check your email.");
         navigate("/verify-otp");
       }
     } catch (err) {
@@ -150,7 +152,7 @@ export default function Signup() {
                 onKeyDown={(e) => e.key === "Enter" && emailRef.current.focus()}
                 className="w-full p-3 rounded-lg bg-gray-100 focus:outline-none"
               />
-              {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
 
             {/* EMAIL */}
@@ -165,47 +167,48 @@ export default function Signup() {
                 onKeyDown={(e) => e.key === "Enter" && facultyRef.current.focus()}
                 className="w-full p-3 rounded-lg bg-gray-100 focus:outline-none"
               />
-              {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
             </div>
 
-            {/* FACULTY */}
-            <div>
-              <select
-                ref={facultyRef}
-                name="faculty"
-                value={form.faculty}
-                onChange={handleChange}
-                onKeyDown={(e) => e.key === "Enter" && levelRef.current.focus()}
-                className="w-full p-3 rounded-lg bg-gray-100 focus:outline-none"
-              >
-                <option value="">Select Faculty</option>
-                <option>Computer Science</option>
-                <option>Business</option>
-                <option>Cyber Security</option>
-              </select>
-              {errors.faculty && <p className="text-red-500 text-xs">{errors.faculty}</p>}
-            </div>
+              {/* FACULTY */}
+          <div>
+            <select
+              ref={facultyRef}
+              name="faculty"
+              value={form.faculty}
+              onChange={handleChange}
+              onKeyDown={(e) => e.key === "Enter" && levelRef.current.focus()}
+              className="w-full p-3 rounded-lg bg-gray-100 focus:outline-none"
+            >
+              <option value="">Select Faculty</option>
+              <option value="BSc Hons Computer Science">Computer Science</option>
+              <option value="BIBM">Business</option>
+              <option value="BSc(Hons) CyberSecurity">Cyber Security</option>
+              <option value="MBA">MBA</option>
+            </select>
+            {errors.faculty && <p className="text-red-500 text-xs mt-1">{errors.faculty}</p>}
+          </div>
 
-            {/* LEVEL */}
-            <div>
-              <select
-                ref={levelRef}
-                name="level"
-                value={form.level}
-                onChange={handleChange}
-                onKeyDown={(e) => e.key === "Enter" && passwordRef.current.focus()}
-                className="w-full p-3 rounded-lg bg-gray-100 focus:outline-none"
-              >
-                <option value="">Select Level</option>
-                <option>Level 4 - First Semester</option>
-                <option>Level 4 - Second Semester</option>
-                <option>Level 5 - First Semester</option>
-                <option>Level 5 - Second Semester</option>
-                <option>Level 6 - First Semester</option>
-                <option>Level 6 - Second Semester</option>
-              </select>
-              {errors.level && <p className="text-red-500 text-xs">{errors.level}</p>}
-            </div>
+          {/* LEVEL */}
+          <div>
+            <select
+              ref={levelRef}
+              name="level"
+              value={form.level}
+              onChange={handleChange}
+              onKeyDown={(e) => e.key === "Enter" && passwordRef.current.focus()}
+              className="w-full p-3 rounded-lg bg-gray-100 focus:outline-none"
+            >
+              <option value="">Select Level</option>
+              <option value="Level 4">Level 4 - First Semester</option>
+              <option value="Level 4">Level 4 - Second Semester</option>
+              <option value="Level 5">Level 5 - First Semester</option>
+              <option value="Level 5">Level 5 - Second Semester</option>
+              <option value="Level 6">Level 6 - First Semester</option>
+              <option value="Level 6">Level 6 - Second Semester</option>
+            </select>
+            {errors.level && <p className="text-red-500 text-xs mt-1">{errors.level}</p>}
+          </div>
 
             {/* PASSWORD */}
             <div className="relative">
@@ -226,7 +229,7 @@ export default function Signup() {
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
-              {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
             </div>
 
             {/* CONFIRM PASSWORD */}
@@ -247,7 +250,7 @@ export default function Signup() {
               >
                 {showConfirmPassword ? "Hide" : "Show"}
               </button>
-              {errors.confirmPassword && <p className="text-red-500 text-xs">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
             </div>
 
             {/* BUTTON */}

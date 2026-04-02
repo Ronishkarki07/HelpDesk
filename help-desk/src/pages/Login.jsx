@@ -17,7 +17,6 @@ export default function Login() {
   };
 
   const handleLogin = async () => {
-    // ✅ Validation
     if (!email || !password) {
       setError("All fields are required");
       return;
@@ -32,7 +31,8 @@ export default function Login() {
       setError("");
       setLoading(true);
 
-      const res = await fetch("http://localhost:3007/login", {
+      // ✅ FIXED: was "http://localhost:3007/login"
+      const res = await fetch("http://localhost:3007/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -45,27 +45,22 @@ export default function Login() {
 
       const data = await res.json();
 
-      // ❌ If login fails
       if (!res.ok) {
-        // 🔥 Case 1: Not verified (OTP required)
         if (data.requiresOTPVerification) {
           localStorage.setItem("otpEmail", email);
           navigate("/verify-otp");
           return;
         }
 
-        // 🔥 Case 2: Account disabled
         if (data.accountDisabled) {
           setError("Your account is deactivated. Contact admin.");
           return;
         }
 
-        // 🔥 Default error
         setError(data.error || "Invalid email or password");
         return;
       }
 
-      // ✅ SUCCESS LOGIN
       localStorage.setItem("token", data.token);
       localStorage.setItem("student", JSON.stringify(data.student));
 
@@ -81,9 +76,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-
       <div className="flex-1 flex flex-col items-center justify-center p-6">
-
         <div className="w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden">
 
           {/* HEADER */}
@@ -120,6 +113,7 @@ export default function Login() {
                   placeholder="student@bicnepal.edu.np"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                   className="bg-transparent flex-1 text-sm focus:outline-none"
                 />
               </div>
@@ -136,6 +130,7 @@ export default function Login() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                   className="bg-transparent flex-1 text-sm focus:outline-none"
                 />
                 <button
@@ -154,7 +149,6 @@ export default function Login() {
                 <input type="checkbox" className="w-4 h-4" />
                 <span className="text-sm text-gray-500">Remember me</span>
               </div>
-
               <span
                 onClick={() => navigate("/forgot-password")}
                 className="text-xs text-red-600 cursor-pointer hover:underline"
@@ -165,9 +159,7 @@ export default function Login() {
 
             {/* ERROR */}
             {error && (
-              <p className="text-red-500 text-sm text-center">
-                {error}
-              </p>
+              <p className="text-red-500 text-sm text-center">{error}</p>
             )}
 
             {/* BUTTON */}
