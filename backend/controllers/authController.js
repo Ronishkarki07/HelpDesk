@@ -55,10 +55,21 @@ exports.signup = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Store OTP in database
-    await Student.storeOTP(email, otp);
+    try {
+      await Student.storeOTP(email, otp);
+    } catch (dbError) {
+      console.error('Database error storing OTP:', dbError);
+      return res.status(500).json({ error: 'Failed to store OTP in database' });
+    }
 
-    // Send OTP to email
-    await sendOTPEmail(email, otp, name);
+    // Send OTP to email (non-critical, continue even if fails)
+    try {
+      await sendOTPEmail(email, otp, name);
+    } catch (emailError) {
+      console.error('Email sending error during signup:', emailError);
+      console.warn(`Warning: Failed to send email to ${email}, but OTP was stored. Error: ${emailError.message}`);
+      // Continue anyway - user will need to request resend
+    }
 
     res.status(201).json({
       message: 'Signup successful! OTP has been sent to your registered email. Please verify within 10 minutes.',
@@ -121,17 +132,28 @@ exports.resendOTP = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Store OTP in database
-    await Student.storeOTP(email, otp);
+    try {
+      await Student.storeOTP(email, otp);
+    } catch (dbError) {
+      console.error('Database error storing OTP:', dbError);
+      return res.status(500).json({ error: 'Failed to store OTP in database' });
+    }
 
-    // Send OTP to email
-    await sendOTPEmail(email, otp, student.name);
+    // Send OTP to email (non-critical, continue even if fails)
+    try {
+      await sendOTPEmail(email, otp, student.name);
+    } catch (emailError) {
+      console.error('Email sending error:', emailError);
+      // Continue anyway - OTP is stored in DB, user can try again
+      console.warn(`Warning: Failed to send email to ${email}, but OTP was stored. Error: ${emailError.message}`);
+    }
 
     res.json({
       message: 'OTP has been resent to your email'
     });
   } catch (error) {
     console.error('Resend OTP error:', error);
-    res.status(500).json({ error: 'Failed to resend OTP' });
+    res.status(500).json({ error: 'Failed to resend OTP. Please try again.' });
   }
 };
 
