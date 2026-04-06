@@ -55,21 +55,10 @@ exports.signup = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Store OTP in database
-    try {
-      await Student.storeOTP(email, otp);
-    } catch (dbError) {
-      console.error('Database error storing OTP:', dbError);
-      return res.status(500).json({ error: 'Failed to store OTP in database' });
-    }
+    await Student.storeOTP(email, otp);
 
-    // Send OTP to email (non-critical, continue even if fails)
-    try {
-      await sendOTPEmail(email, otp, name);
-    } catch (emailError) {
-      console.error('Email sending error during signup:', emailError);
-      console.warn(`Warning: Failed to send email to ${email}, but OTP was stored. Error: ${emailError.message}`);
-      // Continue anyway - user will need to request resend
-    }
+    // Send OTP to email (this FAILS without .env credentials)
+    await sendOTPEmail(email, otp, name);
 
     res.status(201).json({
       message: 'Signup successful! OTP has been sent to your registered email. Please verify within 10 minutes.',
@@ -132,12 +121,7 @@ exports.resendOTP = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Store OTP in database
-    try {
-      await Student.storeOTP(email, otp);
-    } catch (dbError) {
-      console.error('Database error storing OTP:', dbError);
-      return res.status(500).json({ error: 'Failed to store OTP in database' });
-    }
+    await Student.storeOTP(email, otp);
 
     // Send OTP to email (non-critical, continue even if fails)
     try {
