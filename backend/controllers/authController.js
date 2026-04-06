@@ -57,7 +57,7 @@ exports.signup = async (req, res) => {
     // Store OTP in database
     await Student.storeOTP(email, otp);
 
-    // Send OTP to email
+    // Send OTP to email (this FAILS without .env credentials)
     await sendOTPEmail(email, otp, name);
 
     res.status(201).json({
@@ -123,15 +123,21 @@ exports.resendOTP = async (req, res) => {
     // Store OTP in database
     await Student.storeOTP(email, otp);
 
-    // Send OTP to email
-    await sendOTPEmail(email, otp, student.name);
+    // Send OTP to email (non-critical, continue even if fails)
+    try {
+      await sendOTPEmail(email, otp, student.name);
+    } catch (emailError) {
+      console.error('Email sending error:', emailError);
+      // Continue anyway - OTP is stored in DB, user can try again
+      console.warn(`Warning: Failed to send email to ${email}, but OTP was stored. Error: ${emailError.message}`);
+    }
 
     res.json({
       message: 'OTP has been resent to your email'
     });
   } catch (error) {
     console.error('Resend OTP error:', error);
-    res.status(500).json({ error: 'Failed to resend OTP' });
+    res.status(500).json({ error: 'Failed to resend OTP. Please try again.' });
   }
 };
 
