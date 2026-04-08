@@ -29,7 +29,7 @@ export default function VerifyOTP() {
       setError("");
 
       // ✅ FIXED: was "http://localhost:3007/verify-otp"
-      const res = await fetch("http://localhost:3007/api/auth/verify-otp", {
+      const res = await fetch("http://localhost:3307/api/auth/verify-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -67,7 +67,7 @@ export default function VerifyOTP() {
       setResendMsg("");
       setError("");
 
-      const res = await fetch("http://localhost:3007/api/auth/resend-otp", {
+      const res = await fetch("http://localhost:3307/api/auth/resend-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
