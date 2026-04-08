@@ -32,7 +32,7 @@ function Sidebar() {
           AN
         </div>
         <div>
-          <div className="text-white font-bold text-sm">Academic Nexus</div>
+          <div className="text-white font-bold text-sm">Setu</div>
           <div className="text-white/40 text-[9px] tracking-widest">
             ACADEMIC AUTHORITY
           </div>
