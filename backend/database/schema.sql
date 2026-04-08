@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS tickets (
   title VARCHAR(255) NOT NULL,
   description TEXT,
   category VARCHAR(100),
-  priority ENUM('low', 'medium', 'high', 'urgent') DEFAULT 'medium',
+  priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
   status ENUM('open', 'in_progress', 'resolved', 'closed') DEFAULT 'open',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -39,6 +39,19 @@ CREATE TABLE IF NOT EXISTS tickets (
   FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
   INDEX idx_student_id (student_id),
   INDEX idx_status (status),
+  INDEX idx_created_at (created_at)
+);
+
+-- Ticket Attachments Table
+CREATE TABLE IF NOT EXISTS ticket_attachments (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  ticket_id INT NOT NULL,
+  attachment_path VARCHAR(255) NOT NULL,
+  original_filename VARCHAR(255) NOT NULL,
+  file_size INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
+  INDEX idx_ticket_id (ticket_id),
   INDEX idx_created_at (created_at)
 );
 
